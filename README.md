@@ -1,7 +1,8 @@
 # Dynamic Nutrition
 
 Five nutrients, tracked from everything you eat, with values modelled on real nutritional data.
-For Minecraft **1.21.11** on **Fabric**, **NeoForge** and **Forge**.
+For Minecraft **1.20** through **26.3** on **Fabric**, **NeoForge** and **Forge**: see
+[Versions](#versions) for exactly which.
 
 Hunger tells you how long since you last ate. It says nothing about what you ate. Dynamic Nutrition
 adds the other half: carbohydrates, protein, fat, vitamins and minerals, each filled by different
@@ -44,19 +45,13 @@ foods and each drained at its own rate.
 
 Values are resolved in four stages. Explicit data first, then item tags, then the recipe graph, so
 bread is a carbohydrate because wheat is. Anything still unresolved is worked out from the food
-convention tags that both loaders ship, which is why a food from a mod nobody has written a compat
-patch for still feeds you something sensible.
-
 ## Configuration
 
-Cloth Config is **required**. It supplies a settings screen in four tabs: the HUD strip, the
-inventory button and tooltips, the variety mechanic, and the nutrient effects, where each of the
-ten effects has its own strength and you can hide Well Nourished and Malnourished from the top of
-the screen, from beside the inventory, or both. Hidden, they still work.
-
-On Forge the dependency is the unofficial **Cloth Config API Forge** port rather than the official
-build, which stops shipping a Forge module at this Minecraft version. Same mod id, same version
-number, separate project.
+Cloth Config gives the mod a settings screen in four tabs: the HUD strip, the inventory button and
+tooltips, the variety mechanic, and the nutrient effects, where each of the ten effects has its own
+strength and you can hide Well Nourished and Malnourished from the top of the screen, from beside
+the inventory, or both. Hidden, they still work. Where Cloth is optional, the mod runs on its
+defaults without it and there is no settings screen.
 
 ## Commands
 
@@ -67,16 +62,33 @@ number, separate project.
 | `/dynamicnutrition unassigned` | anyone | foods that resolved to no nutrients |
 | `/dynamicnutrition export` | operators | the whole resolved table as a CSV, for pack authors |
 
+## Versions
+
+| Minecraft | Loaders | Cloth Config | Source folder |
+|---|---|---|---|
+| 26.1, 26.2, 26.3 | Fabric, NeoForge | optional | `26.x` |
+| 1.21.11 | Fabric, NeoForge, Forge | required | `1.21` |
+| 1.21, 1.21.1 | Fabric, NeoForge, Forge | required | `1.21` |
+| 1.20, 1.20.1 | Fabric, Forge (also runs on NeoForge 47.1) | optional | `1.20` |
+
+On Forge 1.21.11 the Cloth dependency is the unofficial **Cloth Config API Forge** port, because the
+official build stops shipping a Forge module after 1.21.3. Same mod id, same version number. On
+Forge 1.21.1 and 1.20.1 it is the official Cloth Config Forge build.
+
 ## Building
 
-JDK 24. The toolchain compiles against Java 21, which is what this Minecraft version requires;
-Gradle 8.14.3 cannot run on JDK 25 and ForgeGradle 6 cannot run on Gradle 9, which is what pins it.
+Each folder is its own Gradle build, because each needs a different Gradle, plugin set or JDK.
+Code and art that are identical in every version live once, in `shared/`.
 
-```
-./gradlew build
-```
+| Folder | JDK to run Gradle | Command |
+|---|---|---|
+| `26.x` | 25 | `./gradlew build` |
+| `1.21` | 24 | `./gradlew build -Pmc=1.21.1` and `./gradlew build -Pmc=1.21.11` |
+| `1.20` | 22 | `./gradlew build` |
 
-Jars land in `fabric/build/libs`, `neoforge/build/libs` and `forge/build/libs`.
+`1.21` builds both 1.21.x versions from one tree: what differs between them lives in
+`src/1.21.1` and `src/1.21.11` inside each module, and `versions/<version>.properties` holds every
+version number. Jars land in each loader's `build/libs`.
 
 ## Licence
 
