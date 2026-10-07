@@ -224,18 +224,21 @@ public final class NutritionTable {
 
         // Stage 5: a food that is another food in a different container. Stems are strictly
         // shorter than the name, so this cannot cycle, and the depth cap still bounds it.
+        NutritionValues named = null;
         if (set.isEmpty() && !limited && depth < MAX_DEPTH && isEdible(item)) {
             for (Item stem : stemsOf(item)) {
-                Set<Nutrient> inherited = resolve(level, stem, depth + 1).nutrients();
-                if (!inherited.isEmpty()) {
-                    set = new LinkedHashSet<>(inherited);
+                NutritionValues stemValues = resolve(level, stem, depth + 1);
+                if (!stemValues.isEmpty()) {
+                    set = new LinkedHashSet<>(stemValues.nutrients());
                     origin = NutritionOrigin.ofName(stem);
+                    named = sameFoodIn(item, stem, stemValues);
                     break;
                 }
             }
         }
 
-        NutritionValues values = NutritionValues.spread(set, magnitude(item, set.size()));
+        NutritionValues values = named != null ? named
+                : NutritionValues.spread(set, magnitude(item, set.size()));
         if (!values.isEmpty() && isCooked(level, item)) {
             values = values.scaled(COOKED_BONUS);
         }
@@ -335,6 +338,23 @@ public final class NutritionTable {
             }
         }
         return found;
+    }
+
+    /**
+     * A food in another container is the SAME food, so it takes that food's real values rather than
+     * an even split: a cup of mushroom stew is mostly vitamins and minerals, like the bowl. Scaled by
+     * the two foods' own hunger totals, so a smaller serving is worth proportionally less. Null when
+     * either has no hunger value to compare, and the even split applies instead.
+     */
+    private static NutritionValues sameFoodIn(Item item, Item stem, NutritionValues stemValues) {
+        int all = Nutrients.all().size();
+        float own = magnitude(item, all);
+        float from = magnitude(stem, all);
+        if (own <= 0 || from <= 0) {
+            return null;
+        }
+        NutritionValues scaled = stemValues.scaled(own / from);
+        return scaled.isEmpty() ? null : scaled;
     }
 
     /**
