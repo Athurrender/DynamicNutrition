@@ -1,0 +1,246 @@
+{
+  "minecraft:apple": {
+    "carbohydrates": 14,
+    "minerals": 3,
+    "vitamins": 6
+  },
+  "minecraft:baked_potato": {
+    "carbohydrates": 17,
+    "minerals": 13,
+    "protein": 3,
+    "vitamins": 10
+  },
+  "minecraft:beef": {
+    "fat": 21,
+    "minerals": 14,
+    "protein": 24,
+    "vitamins": 5
+  },
+  "minecraft:beetroot": {
+    "carbohydrates": 5,
+    "minerals": 9,
+    "protein": 1,
+    "vitamins": 9
+  },
+  "minecraft:beetroot_soup": {
+    "carbohydrates": 10,
+    "fat": 1,
+    "minerals": 21,
+    "protein": 4,
+    "vitamins": 21
+  },
+  "minecraft:bread": {
+    "carbohydrates": 16,
+    "fat": 2,
+    "minerals": 4,
+    "protein": 4,
+    "vitamins": 2
+  },
+  "minecraft:cake": {
+    "carbohydrates": 24,
+    "fat": 11,
+    "minerals": 2,
+    "protein": 3,
+    "vitamins": 1
+  },
+  "minecraft:carrot": {
+    "carbohydrates": 7,
+    "minerals": 6,
+    "protein": 1,
+    "vitamins": 27
+  },
+  "minecraft:chicken": {
+    "fat": 9,
+    "minerals": 9,
+    "protein": 25,
+    "vitamins": 5
+  },
+  "minecraft:chorus_fruit": {
+    "carbohydrates": 8,
+    "minerals": 12,
+    "protein": 1,
+    "vitamins": 6
+  },
+  "minecraft:cod": {
+    "fat": 1,
+    "minerals": 11,
+    "protein": 17,
+    "vitamins": 5
+  },
+  "minecraft:cooked_beef": {
+    "fat": 17,
+    "minerals": 12,
+    "protein": 22,
+    "vitamins": 4
+  },
+  "minecraft:cooked_chicken": {
+    "fat": 7,
+    "minerals": 8,
+    "protein": 26,
+    "vitamins": 4
+  },
+  "minecraft:cooked_cod": {
+    "fat": 1,
+    "minerals": 10,
+    "protein": 17,
+    "vitamins": 4
+  },
+  "minecraft:cooked_mutton": {
+    "fat": 17,
+    "minerals": 9,
+    "protein": 17,
+    "vitamins": 3
+  },
+  "minecraft:cooked_porkchop": {
+    "fat": 21,
+    "minerals": 9,
+    "protein": 23,
+    "vitamins": 5
+  },
+  "minecraft:cooked_rabbit": {
+    "fat": 7,
+    "minerals": 9,
+    "protein": 21,
+    "vitamins": 4
+  },
+  "minecraft:cooked_salmon": {
+    "fat": 12,
+    "minerals": 11,
+    "protein": 18,
+    "vitamins": 12
+  },
+  "minecraft:cookie": {
+    "carbohydrates": 11,
+    "fat": 6,
+    "minerals": 1,
+    "protein": 1
+  },
+  "minecraft:dried_kelp": {
+    "carbohydrates": 10,
+    "minerals": 11,
+    "protein": 4,
+    "vitamins": 3
+  },
+  "minecraft:enchanted_golden_apple": {
+    "carbohydrates": 14,
+    "minerals": 32,
+    "vitamins": 32
+  },
+  "minecraft:glow_berries": {
+    "carbohydrates": 5,
+    "minerals": 3,
+    "vitamins": 7
+  },
+  "minecraft:golden_apple": {
+    "carbohydrates": 14,
+    "minerals": 32,
+    "vitamins": 32
+  },
+  "minecraft:golden_carrot": {
+    "carbohydrates": 7,
+    "minerals": 22,
+    "protein": 1,
+    "vitamins": 31
+  },
+  "minecraft:honey_bottle": {
+    "carbohydrates": 27,
+    "minerals": 1
+  },
+  "minecraft:melon_slice": {
+    "carbohydrates": 5,
+    "minerals": 2,
+    "protein": 1,
+    "vitamins": 6
+  },
+  "minecraft:mushroom_stew": {
+    "carbohydrates": 7,
+    "fat": 1,
+    "minerals": 19,
+    "protein": 6,
+    "vitamins": 20
+  },
+  "minecraft:mutton": {
+    "fat": 19,
+    "minerals": 10,
+    "protein": 19,
+    "vitamins": 4
+  },
+  "minecraft:poisonous_potato": {
+    "carbohydrates": 16,
+    "minerals": 6,
+    "protein": 3,
+    "vitamins": 4
+  },
+  "minecraft:porkchop": {
+    "fat": 23,
+    "minerals": 11,
+    "protein": 24,
+    "vitamins": 6
+  },
+  "minecraft:potato": {
+    "carbohydrates": 16,
+    "minerals": 13,
+    "protein": 3,
+    "vitamins": 13
+  },
+  "minecraft:pufferfish": {
+    "minerals": 3,
+    "protein": 5,
+    "vitamins": 1
+  },
+  "minecraft:pumpkin_pie": {
+    "carbohydrates": 18,
+    "fat": 10,
+    "minerals": 5,
+    "protein": 4,
+    "vitamins": 13
+  },
+  "minecraft:rabbit": {
+    "fat": 6,
+    "minerals": 11,
+    "protein": 21,
+    "vitamins": 5
+  },
+  "minecraft:rabbit_stew": {
+    "carbohydrates": 15,
+    "fat": 10,
+    "minerals": 26,
+    "protein": 25,
+    "vitamins": 32
+  },
+  "minecraft:rotten_flesh": {
+    "fat": 9,
+    "minerals": 3,
+    "protein": 14,
+    "vitamins": 1
+  },
+  "minecraft:salmon": {
+    "fat": 15,
+    "minerals": 13,
+    "protein": 19,
+    "vitamins": 14
+  },
+  "minecraft:spider_eye": {
+    "fat": 1,
+    "minerals": 4,
+    "protein": 3
+  },
+  "minecraft:suspicious_stew": {
+    "carbohydrates": 7,
+    "fat": 1,
+    "minerals": 19,
+    "protein": 6,
+    "vitamins": 22
+  },
+  "minecraft:sweet_berries": {
+    "carbohydrates": 5,
+    "minerals": 2,
+    "vitamins": 6
+  },
+  "minecraft:tropical_fish": {
+    "fat": 2,
+    "minerals": 4,
+    "protein": 6,
+    "vitamins": 2
+  }
+}

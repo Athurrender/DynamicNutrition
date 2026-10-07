@@ -1,0 +1,25 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.chillpavz.dynamicnutrition.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+    "ItemStackMixin",
+    "LivingEntityEffectRemovalMixin",
+    "LivingEntityResistanceMixin",
+    "PlayerNutritionMixin",
+    "PlayerDigSpeedMixin"
+  ],
+  "client": [
+    "GuiEffectsMixin",
+    "EffectsInInventoryMixin",
+    "FogRendererMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 0
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

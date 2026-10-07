@@ -1,0 +1,43 @@
+{
+    "schemaVersion": 1,
+    "id": "${mod_id}",
+    "version": "${version}",
+    "name": "${mod_name}",
+    "description": "${description}",
+    "authors": [
+        "${mod_author}"
+    ],
+    "contact": {
+        "homepage": "https://modrinth.com/mod/dynamicnutrition",
+        "sources": "https://github.com/ChillPavz/DynamicNutrition",
+        "issues": "https://github.com/ChillPavz/DynamicNutrition/issues"
+    },
+    "license": "${license}",
+    "icon": "${mod_id}.png",
+    "environment": "*",
+    "entrypoints": {
+        "main": [
+            "com.chillpavz.dynamicnutrition.DynamicNutritionFabric"
+        ],
+        "client": [
+            "com.chillpavz.dynamicnutrition.client.DynamicNutritionFabricClient"
+        ],
+        "modmenu": [
+            "com.chillpavz.dynamicnutrition.config.ModMenuIntegration"
+        ]
+    },
+    "mixins": [
+        "${mod_id}.fabric.mixins.json"
+    ],
+    "accessWidener": "${mod_id}.accesswidener",
+    "depends": {
+        "fabricloader": ">=${fabric_loader_version}",
+        "fabric-api": "*",
+        "minecraft": "${fabric_minecraft_version_range}",
+        "java": ">=${java_version}"
+    },
+    "recommends": {
+        "cloth-config2": "*",
+        "modmenu": "*"
+    }
+}

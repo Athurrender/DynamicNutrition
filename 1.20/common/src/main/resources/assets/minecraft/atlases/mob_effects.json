@@ -1,0 +1,54 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/speed",
+      "sprite": "dynamicnutrition:speed"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/slowness",
+      "sprite": "dynamicnutrition:slowness"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/strength",
+      "sprite": "dynamicnutrition:strength"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/weakness",
+      "sprite": "dynamicnutrition:weakness"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/resistance",
+      "sprite": "dynamicnutrition:resistance"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/hunger",
+      "sprite": "dynamicnutrition:hunger"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/regeneration",
+      "sprite": "dynamicnutrition:regeneration"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/blindness",
+      "sprite": "dynamicnutrition:blindness"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/haste",
+      "sprite": "dynamicnutrition:haste"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "minecraft:mob_effect/mining_fatigue",
+      "sprite": "dynamicnutrition:mining_fatigue"
+    }
+  ]
+}

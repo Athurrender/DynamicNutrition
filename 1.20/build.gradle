@@ -1,0 +1,31 @@
+plugins {
+    // see https://fabricmc.net/develop/ for new versions
+    id 'fabric-loom' version '1.9-SNAPSHOT' apply false
+    // FORGE IS BUILT WITH MODDEVGRADLE'S legacyForge PLUGIN HERE, not ForgeGradle.
+    // ForgeGradle 6 is what the 1.21 branch uses, and it works at 1.20.1 as well, but MDG
+    // is the route the other 1.20.1 projects in this folder already build green with: it
+    // works in official Mojang names throughout, so there is no second SRG-named access
+    // transformer and no reobf configuration to get wrong.
+    id 'net.neoforged.moddev.legacyforge' version '2.0.77' apply false
+}
+
+// Cloth Config and Mod Menu are the config screen's two dependencies; neither is on
+// Maven Central. Cloth's mod id is `cloth_config` and it PROVIDES `cloth-config2`,
+// which is why the Fabric metadata depends on one spelling and the loader TOML on the
+// other.
+//
+// Official cloth ships a real Forge build at 1.20 and 1.20.1 (11.1.136, one file for
+// both), so all three loaders get the generated screen and nothing here needs the
+// unofficial cloth-config-forge port that the 1.21.11 branch uses.
+allprojects {
+    repositories {
+        maven {
+            name = 'shedaniel'
+            url = uri('https://maven.shedaniel.me/')
+        }
+        maven {
+            name = 'TerraformersMC'
+            url = uri('https://maven.terraformersmc.com/')
+        }
+    }
+}

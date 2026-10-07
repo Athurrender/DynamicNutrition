@@ -1,0 +1,46 @@
+plugins {
+    id 'multiloader-common'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+legacyForge {
+    // MCP rather than a NeoForm version: legacyForge builds against the MCP-mapped
+    // Minecraft for this era. The 1.21 branch's common module uses neoFormVersion, which
+    // does not apply below 1.20.2.
+    mcpVersion = minecraft_version
+
+    // Use accessTransformers.from(...), NOT "accessTransformers = [...]". Both exist on
+    // the DSL and only the first configures anything; the assignment form fails silently
+    // and looks exactly like an AT that matched nothing.
+    //
+    // ON here and OFF on the forge module. There it runs against Forge's own merged
+    // transformer, several of whose entries already fail validation at 1.20.1, and the
+    // build then dies with a bare non-zero exit. Nothing is lost, because this module
+    // applies the same file against vanilla where our entries would be the only ones.
+    validateAccessTransformers = true
+
+    def at = file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers.from(at.absolutePath)
+    }
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+}
+
+configurations {
+    commonJava {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+    commonResources {
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+artifacts {
+    commonJava sourceSets.main.java.sourceDirectories.singleFile
+    commonResources sourceSets.main.resources.sourceDirectories.singleFile
+}

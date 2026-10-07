@@ -1,0 +1,99 @@
+plugins {
+    id 'multiloader-loader'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+// Three client mixins (the effect list, the top-right effects, the HUD strip), the Forge copies of
+// the Fabric ones. Forge 1.20.1 runs on SRG names, so they need a refmap, which legacyForge's
+// mixin block generates, and Forge only reads a config named in the MixinConfigs manifest entry.
+
+// mod_id, not mod_name: mod_name has a space in it and would produce a jar with one.
+//
+// THIS IS ALSO THE NEOFORGE JAR. NeoForge 47.1.x provides the `forge` mod id, so the same
+// file loads on both loaders and the upload is tagged for both. There is no neoforge
+// module on this branch.
+base {
+    archivesName = "${mod_id}-forge-${minecraft_version_label}"
+}
+
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
+
+    // OFF here and ON in common/build.gradle, deliberately. On this module the transform
+    // runs against FORGE's own merged access transformer, several of whose entries already
+    // fail validation at 1.20.1 (records widened without their constructor, a MAKEFINAL on
+    // an already-non-final field). Those are not ours and cannot be fixed from here, so
+    // with validation on the build dies in createMinecraftArtifacts with a bare non-zero
+    // exit and the real reason buried in forge/build/tmp/neoformruntime/*/console_output.txt.
+    validateAccessTransformers = false
+
+    // ONE access transformer, common's, in PLAIN names. There is no second SRG-named copy
+    // here: that is a ForgeGradle requirement, and this module builds with ModDevGradle's
+    // legacyForge, which works in official Mojang names throughout. Point at common's file
+    // by absolute path, because a relative one would resolve against THIS project.
+    def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
+    if (at.exists()) {
+        accessTransformers.from(at.absolutePath)
+    }
+    parchment {
+        minecraftVersion = parchment_minecraft
+        mappingsVersion = parchment_version
+    }
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.forge.mixins.json"
+}
+
+jar {
+    manifest {
+        attributes["MixinConfigs"] = "${mod_id}.forge.mixins.json"
+    }
+}
+
+dependencies {
+    annotationProcessor("org.spongepowered:mixin:0.8.5:processor")
+
+    // OFFICIAL Cloth Config, from shedaniel's own maven. 11.1.136 ships one Forge file
+    // covering both 1.20 and 1.20.1, so the screen is generated from the same annotated
+    // class Fabric uses and no hand-written screen is needed.
+    //
+    // Cloth is OPTIONAL at RUNTIME on this band, and that is declared in mods.toml
+    // (mandatory = false) rather than here: it has no neoforge-tagged file at 1.20.x, so a
+    // NeoForge player is never offered it and the mod must run without it. This dependency
+    // is still a normal one so that the dev client can open the screen.
+    //
+    // modImplementation, not implementation: cloth's published Forge jar is SRG named, like every
+    // 1.20.1 Forge release, and this dev runtime is on Mojang names. Unremapped, the config screen
+    // dies in dev with NoSuchMethodError on an m_NNNNN_ name while everything else works.
+    modImplementation("me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}")
+}
+
+// NOTE: there is deliberately NO `jar { finalizedBy('reobfJar') }` here.
+//
+// Forge 1.20.1 runs on SRG member names, so the jar has to be reobfuscated back from the
+// official names it was compiled against - Forge from 1.20.6 does not, which is why no
+// newer branch does any of this. ModDevGradle's legacyForge wires that up itself at 2.0.77:
+// `reobfJar` is the task that PRODUCES the published artifact, not a step bolted on after
+// `jar`. Disabling it leaves build/libs with no main jar at all, which is how that was
+// established rather than assumed. The older template that other 1.20.1 projects here use
+// does need the line; this one does not, and adding it back would imply a requirement that
+// is not there.
+//
+// The jar audit checks the result rather than the wiring: it fails if the mod's own classes
+// in the Forge jar carry no SRG names.

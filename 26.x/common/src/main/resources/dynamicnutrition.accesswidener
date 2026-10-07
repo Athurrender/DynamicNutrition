@@ -1,0 +1,13 @@
+accessWidener v2 official
+
+# The inventory panel position, so the nutrition button can sit at a fixed spot on the panel
+# rather than at a fixed spot on the screen. Vanilla shifts leftPos when the recipe book opens, so
+# computing it from the window size is wrong exactly when a player is most likely to be looking.
+#
+# Fields only, which is the safe kind of widening: the trap where a widened METHOD breaks every
+# subclass that overrides it more weakly cannot apply to a field.
+#
+# The header must be the literal FIRST line, and the namespace must be official, because 26.1+
+# ships de-obfuscated with no mappings layer.
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen leftPos I
+accessible field net/minecraft/client/gui/screens/inventory/AbstractContainerScreen topPos I

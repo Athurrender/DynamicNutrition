@@ -1,0 +1,55 @@
+plugins {
+    id 'multiloader-loader'
+    id 'fabric-loom'
+}
+// ONE FABRIC JAR COVERS 1.20 AND 1.20.1. fabric-api ships a separate file per version,
+// but every entry point this mod uses is byte-identical between 0.83.0+1.20 and
+// 0.92.x+1.20.1, so the declared range is the whole band.
+base {
+    archivesName = "${mod_id}-fabric-${minecraft_version_label}"
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.layered {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
+    }
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+    // Cloth is OPTIONAL on this band and Mod Menu always was, so both are compile-time
+    // only as far as the player is concerned: neither is jar-in-jar'd - cloth is LGPL-3.0
+    // - and the mod runs without either.
+    //
+    // modImplementation, not implementation: 1.20.1 is obfuscated, so mod dependencies
+    // have to be remapped. The 26.x branch uses plain implementation because Loom dropped
+    // modImplementation once the game shipped de-obfuscated.
+    modImplementation("me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}") {
+        exclude(group: 'net.fabricmc.fabric-api')
+    }
+    modImplementation("com.terraformersmc:modmenu:${mod_menu_version}") {
+        exclude(group: 'net.fabricmc.fabric-api')
+    }
+}
+
+loom {
+    def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
+    if (aw.exists()) {
+        accessWidenerPath.set(aw)
+    }
+    runs {
+        client {
+            client()
+            setConfigName('Fabric Client')
+            ideConfigGenerated(true)
+            runDir('runs/client')
+        }
+        server {
+            server()
+            setConfigName('Fabric Server')
+            ideConfigGenerated(true)
+            runDir('runs/server')
+        }
+    }
+}
