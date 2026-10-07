@@ -39,7 +39,9 @@ public record NutritionOrigin(NutritionOrigin.Source source, List<Item> from) {
          * {@code mushroom_stew}. Last on purpose: the wire carries the ordinal, so a new stage goes
          * at the end and every older one keeps its number.
          */
-        NAME;
+        NAME,
+        /** Read from the food's own name (spider_meat, tentacles). The last resort; appended last. */
+        WORDS;
 
         private static final Source[] VALUES = values();
 

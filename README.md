@@ -43,12 +43,13 @@ foods and each drained at its own rate.
 
 ## Any food mod works, with no configuration
 
-Values are resolved in five stages. Explicit data first, then item tags, then the recipe graph, so
-bread is a carbohydrate because wheat is. Anything still unresolved is worked out from the food
-and drink convention tags that every loader ships, including the subtags mods add for themselves,
-so dragon meat from a mod nobody has written a compat patch for still reads as meat. Last, a food
-that is another food in a different container, such as a stew served in a cup, is worth what that
-food is worth.
+Values are resolved in stages. Explicit data first, then item tags, then the recipe graph, so
+bread is a carbohydrate because wheat is, even through ingredients you cannot eat on their own.
+Anything still unresolved is worked out from the food and drink convention tags, including the
+subtags mods add for themselves, so dragon meat from a mod nobody has written a compat patch for
+still reads as meat. Then a food served differently, such as a stew in a cup or a slice of a feast,
+is worth what that food is worth, and last a food's own name is read: spider meat is meat. Foods
+that no stage can place are listed by `/dynamicnutrition unassigned`.
 
 ## Configuration
 

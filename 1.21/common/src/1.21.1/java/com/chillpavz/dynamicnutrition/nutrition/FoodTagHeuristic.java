@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -42,6 +43,15 @@ public final class FoodTagHeuristic {
             new Rule(c("foods/raw_meat"), List.of(Nutrients.PROTEIN, Nutrients.FAT)),
             new Rule(c("foods/cooked_fish"), List.of(Nutrients.PROTEIN, Nutrients.MINERALS)),
             new Rule(c("foods/raw_fish"), List.of(Nutrients.PROTEIN, Nutrients.MINERALS)),
+            // A crop's own identity before the generic labels: corn is tagged c:foods/vegetable as
+            // well as c:crops/grain, and rice c:seeds as well as c:crops/rice. Read as a vegetable or
+            // a seed (fat and minerals), corn and rice dishes lost their carbohydrate.
+            new Rule(c("crops/grain"), List.of(Nutrients.CARBOHYDRATES)),
+            new Rule(c("crops/rice"), List.of(Nutrients.CARBOHYDRATES)),
+            new Rule(c("crops/corn"), List.of(Nutrients.CARBOHYDRATES)),
+            new Rule(c("seeds/corn"), List.of(Nutrients.CARBOHYDRATES)),
+            // Soybeans are tagged c:seeds too, and soy is a protein food.
+            new Rule(c("crops/soybeans"), List.of(Nutrients.PROTEIN, Nutrients.FAT)),
             new Rule(c("foods/berry"), List.of(Nutrients.CARBOHYDRATES, Nutrients.VITAMINS)),
             new Rule(c("foods/fruit"), List.of(Nutrients.CARBOHYDRATES, Nutrients.VITAMINS)),
             new Rule(c("foods/vegetable"), List.of(Nutrients.VITAMINS, Nutrients.MINERALS)),
@@ -73,10 +83,15 @@ public final class FoodTagHeuristic {
             new Rule(c("crops/pumpkin"), List.of(Nutrients.CARBOHYDRATES, Nutrients.VITAMINS)),
             new Rule(c("crops/sugar_cane"), List.of(Nutrients.CARBOHYDRATES)),
             new Rule(c("crops/cocoa_bean"), List.of(Nutrients.CARBOHYDRATES, Nutrients.FAT)),
-            new Rule(c("seeds"), List.of(Nutrients.FAT, Nutrients.MINERALS)),
-            // Broadest possible net, last. Anything a mod bothered to call food is at least a
-            // carbohydrate source, which is a defensible default and beats resolving to nothing.
-            new Rule(c("foods"), List.of(Nutrients.CARBOHYDRATES)));
+            new Rule(c("seeds"), List.of(Nutrients.FAT, Nutrients.MINERALS)));
+
+    /**
+     * Broadest possible net, LAST, after the subtag names and the item's own name: anything a mod
+     * bothered to call food is at least a carbohydrate source, which beats resolving to nothing. As a
+     * rule in the list it came first for every food tagged only {@code c:foods}, and ham, roast
+     * chicken, crab, shrimp, cheese and salads were all pure carbohydrate.
+     */
+    private static final TagKey<Item> ANY_FOOD = c("foods");
 
     private FoodTagHeuristic() {
     }
@@ -94,8 +109,15 @@ public final class FoodTagHeuristic {
                 return new LinkedHashSet<>(rule.nutrients());
             }
         }
-        return fromSubtagNames(holder.tags().map(tag -> tag.location().getNamespace() + ":"
-                + tag.location().getPath()).toList());
+        Set<Nutrient> named = fromSubtagNames(holder.tags().map(tag -> tag.location().getNamespace()
+                + ":" + tag.location().getPath()).toList());
+        if (named.isEmpty() && holder.is(ANY_FOOD)) {
+            named = FoodWords.forTagPath(BuiltInRegistries.ITEM.getKey(item).getPath());
+            if (named.isEmpty()) {
+                named = new LinkedHashSet<>(List.of(Nutrients.CARBOHYDRATES));
+            }
+        }
+        return named;
     }
 
     /**

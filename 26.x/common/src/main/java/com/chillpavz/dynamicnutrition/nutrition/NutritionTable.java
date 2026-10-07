@@ -89,6 +89,12 @@ public final class NutritionTable {
     private final Map<Item, NutritionValues> resolved = new HashMap<>();
     private final Map<Item, NutritionOrigin> origins = new HashMap<>();
     private final Set<Item> resolving = new HashSet<>();
+    /**
+     * The nutrient SET each resolved item stands for, food or not. A non-food ingredient (wheat, a
+     * raw skewer, a feast block) is worth nothing to eat, so its VALUES are empty, but the recipe walk
+     * and the name stage need what it would feed. See {@link #setOf}.
+     */
+    private final Map<Item, Set<Nutrient>> sets = new HashMap<>();
     /** Item path to the items with that path, for the name stage. Built on first use. */
     private Map<String, List<Item>> byPath = null;
     private final RecipeIndex recipes = new RecipeIndex();
@@ -117,6 +123,7 @@ public final class NutritionTable {
     /** Drop every derived answer. The explicit table survives; a reload replaces that separately. */
     public synchronized void invalidate() {
         resolved.clear();
+        sets.clear();
         origins.clear();
         resolving.clear();
         recipes.clear();
@@ -185,6 +192,7 @@ public final class NutritionTable {
         if (exact != null) {
             NutritionValues capped = exact.capped(MAX_PER_NUTRIENT);
             resolved.put(item, capped);
+            sets.put(item, dominant(capped));
             origins.put(item, NutritionOrigin.of(NutritionOrigin.Source.EXPLICIT));
             return capped;
         }
@@ -222,18 +230,44 @@ public final class NutritionTable {
             }
         }
 
-        // Stage 5: a food that is another food in a different container. Stems are strictly
-        // shorter than the name, so this cannot cycle, and the depth cap still bounds it.
+        // Stage 5: a food that is another food in a different container, or a serving of a feast
+        // block. A candidate can be LONGER than the name (dragon_meat_stew_block), so this runs
+        // under the same cycle guard as the recipe walk, and the depth cap still bounds it.
         NutritionValues named = null;
-        if (set.isEmpty() && !limited && depth < MAX_DEPTH && isEdible(item)) {
-            for (Item stem : stemsOf(item)) {
-                NutritionValues stemValues = resolve(level, stem, depth + 1);
-                if (!stemValues.isEmpty()) {
-                    set = new LinkedHashSet<>(stemValues.nutrients());
-                    origin = NutritionOrigin.ofName(stem);
-                    named = sameFoodIn(item, stem, stemValues);
-                    break;
+        if (set.isEmpty() && !limited && depth < MAX_DEPTH && isEdible(item) && resolving.add(item)) {
+            try {
+                for (Item stem : stemsOf(item)) {
+                    NutritionValues stemValues = resolve(level, stem, depth + 1);
+                    Set<Nutrient> stemSet = sets.getOrDefault(stem, stemValues.nutrients());
+                    if (!stemSet.isEmpty()) {
+                        set = new LinkedHashSet<>(stemSet);
+                        origin = NutritionOrigin.ofName(stem);
+                        // Real values only when this is the stem SERVED differently (a cup of
+                        // stew), never for a dish named after an ingredient (a beef omelet is not
+                        // beef) or a feast block: those give the set, and the split below applies.
+                        boolean serving = !stemValues.isEmpty() && FoodWords.isServing(
+                                BuiltInRegistries.ITEM.getKey(item).getPath(),
+                                BuiltInRegistries.ITEM.getKey(stem).getPath());
+                        named = serving ? sameFoodIn(item, stem, stemValues) : null;
+                        if (named == null) {
+                            // A dish named after an ingredient is that ingredient AND the dish:
+                            // egg_cookie is egg and cookie, so its own words join the set.
+                            set.addAll(FoodWords.forTagPath(BuiltInRegistries.ITEM.getKey(item).getPath()));
+                        }
+                        break;
+                    }
                 }
+            } finally {
+                resolving.remove(item);
+            }
+        }
+
+        // Stage 6: the food's own name, last word first (spider_meat, tentacles, scrambled_egg). Only
+        // for an edible item every other stage left empty; the same words as the tag-name reading.
+        if (set.isEmpty() && !limited && isEdible(item)) {
+            set = FoodWords.forTagPath(BuiltInRegistries.ITEM.getKey(item).getPath());
+            if (!set.isEmpty()) {
+                origin = NutritionOrigin.of(NutritionOrigin.Source.WORDS);
             }
         }
 
@@ -248,8 +282,41 @@ public final class NutritionTable {
             return values;
         }
         resolved.put(item, values);
+        sets.put(item, set);
         origins.put(item, values.isEmpty() ? NutritionOrigin.NONE : origin);
         return values;
+    }
+
+    /**
+     * What an explicit food passes on as an ingredient: the nutrients it is notably rich in, at least a
+     * quarter of its largest value. A honey bottle is carbohydrate 27 and minerals 1; passing on both
+     * made everything sweetened with honey a mineral source.
+     */
+    private static Set<Nutrient> dominant(NutritionValues values) {
+        int max = 0;
+        for (Nutrient nutrient : values.nutrients()) {
+            max = Math.max(max, values.get(nutrient));
+        }
+        Set<Nutrient> rich = new LinkedHashSet<>();
+        for (Nutrient nutrient : values.nutrients()) {
+            if (values.get(nutrient) * 4 >= max) {
+                rich.add(nutrient);
+            }
+        }
+        return rich;
+    }
+
+    /**
+     * What an item would feed, food or not: its resolved set when it has one, else its values'.
+     *
+     * <p>Reading an ingredient's VALUES instead lost every non-food ingredient: wheat, sugar, a milk
+     * bucket, a raw skewer resolve a perfectly good set and then spread it over a hunger value of
+     * zero, which is nothing. Every recipe that went through one of them inherited nothing from it.
+     */
+    private Set<Nutrient> setOf(ServerLevel level, Item item, int depth) {
+        NutritionValues values = resolve(level, item, depth);
+        Set<Nutrient> set = sets.get(item);
+        return set != null ? set : values.nutrients();
     }
 
     // ---------------------------------------------------------------- stages
@@ -274,36 +341,55 @@ public final class NutritionTable {
      */
     private Set<Nutrient> recipeNutrients(ServerLevel level, Item item, int depth,
                                           List<Item> contributors) {
-        Set<Nutrient> found = new LinkedHashSet<>();
-        for (RecipeHolder<?> holder : recipes.recipesFor(level, item)) {
-            PlacementInfo info;
-            try {
-                info = holder.value().placementInfo();
-            } catch (Throwable t) {
-                continue;
-            }
-            if (info == null || info == PlacementInfo.NOT_PLACEABLE || info.isImpossibleToPlace()) {
-                continue;
-            }
-            for (Ingredient ingredient : info.ingredients()) {
-                // An ingredient can accept many items; the first is a deterministic representative.
-                var first = ingredient.items().findFirst();
-                if (first.isEmpty()) {
+        // An item's own mod says what it is; another mod's alternative recipe does not. In one food
+        // pack sugar is also crafted from a strider egg, a date syrup and a crate, and taking the union
+        // of every recipe made sugar protein and fat, and everything sweetened with it too. So the
+        // item's own namespace first, then vanilla's, then everyone else's, first tier that answers.
+        String own = BuiltInRegistries.ITEM.getKey(item).getNamespace();
+        var all = recipes.recipesFor(level, item);
+        for (int tier = 0; tier < 3; tier++) {
+            Set<Nutrient> found = new LinkedHashSet<>();
+            List<Item> from = new ArrayList<>();
+            for (var holder : all) {
+                if (tierOf(namespaceOf(holder), own) != tier) {
                     continue;
                 }
-                Item ingredientItem = first.get().value();
-                if (ingredientItem == item) {
+                List<Ingredient> ingredients = ingredientsOf(holder);
+                if (ingredients == null) {
                     continue;
                 }
-                Set<Nutrient> ingredientNutrients =
-                        resolve(level, ingredientItem, depth + 1).nutrients();
-                if (!ingredientNutrients.isEmpty() && !contributors.contains(ingredientItem)) {
-                    contributors.add(ingredientItem);
+                for (Ingredient ingredient : ingredients) {
+                    // An ingredient can accept many items; the first is a deterministic representative.
+                    Item ingredientItem = firstItem(ingredient);
+                    if (ingredientItem == null || ingredientItem == item) {
+                        continue;
+                    }
+                    Set<Nutrient> ingredientNutrients = setOf(level, ingredientItem, depth + 1);
+                    if (!ingredientNutrients.isEmpty() && !from.contains(ingredientItem)) {
+                        from.add(ingredientItem);
+                    }
+                    found.addAll(ingredientNutrients);
                 }
-                found.addAll(ingredientNutrients);
+            }
+            if (!found.isEmpty()) {
+                contributors.addAll(from);
+                return found;
             }
         }
-        return found;
+        return new LinkedHashSet<>();
+    }
+
+    /** 0 for the item's own namespace, 1 for vanilla's, 2 for any other mod's. */
+    private static int tierOf(String namespace, String own) {
+        if (namespace.equals(own)) {
+            return 0;
+        }
+        return namespace.equals("minecraft") ? 1 : 2;
+    }
+
+    /** The namespace of a recipe's id: the mod (or datapack) that defines it. */
+    private static String namespaceOf(RecipeHolder<?> holder) {
+        return holder.id().identifier().getNamespace();
     }
 
     /**
@@ -331,9 +417,13 @@ public final class NutritionTable {
                     }
                 }
             }
-            for (Item candidate : named) {
-                if (candidate != item && !found.contains(candidate)) {
-                    found.add(candidate);
+            // Another mod's item only by a name of two words or more: mushroom_stew_cup may be
+            // farmersdelight's or vanilla's stew, but a coffee pie is not Rustic Delight's coffee.
+            if (stem.indexOf('_') > 0) {
+                for (Item candidate : named) {
+                    if (candidate != item && !found.contains(candidate)) {
+                        found.add(candidate);
+                    }
                 }
             }
         }
@@ -404,6 +494,41 @@ public final class NutritionTable {
             }
         }
         return false;
+    }
+
+    /**
+     * A recipe's ingredients, or null for one that cannot tell us anything: not placeable (a special,
+     * code driven recipe), impossible to place, or one that throws.
+     */
+    private static List<Ingredient> ingredientsOf(RecipeHolder<?> holder) {
+        try {
+            PlacementInfo info = holder.value().placementInfo();
+            if (info == null || info == PlacementInfo.NOT_PLACEABLE || info.isImpossibleToPlace()) {
+                return null;
+            }
+            return info.ingredients();
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * The item that stands for an ingredient: vanilla's when the ingredient accepts one, else the first.
+     * A tag's first item is whatever mod sorted first: in one food pack {@code #c:eggs} began with a
+     * vegan mod's silken tofu, and every dough made with "an egg" stopped being a protein source.
+     */
+    private static Item firstItem(Ingredient ingredient) {
+        Item first = null;
+        for (var it = ingredient.items().iterator(); it.hasNext();) {
+            Item each = it.next().value();
+            if (first == null) {
+                first = each;
+            }
+            if (BuiltInRegistries.ITEM.getKey(each).getNamespace().equals("minecraft")) {
+                return each;
+            }
+        }
+        return first;
     }
 
     // ---------------------------------------------------------------- prewarm
