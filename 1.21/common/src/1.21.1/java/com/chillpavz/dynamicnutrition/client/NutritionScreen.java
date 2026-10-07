@@ -162,13 +162,17 @@ public class NutritionScreen extends Screen {
         return Component.literal(value + " / " + (int) PlayerNutrition.MAX);
     }
 
+    /**
+     * The panel and the rows belong to the background on this band. Screen.render here calls
+     * renderBackground first, which blurs everything already drawn in the frame, and then draws the
+     * widgets. Painting the panel before super.render therefore blurred the panel along with the
+     * world. Drawn here, after the blur, it stays sharp and still sits under the back arrow: drawing
+     * it after super.render instead would cover the arrow, which keeps taking clicks and showing its
+     * tooltip while looking like it was never added.
+     */
     @Override
-    public void render(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
-        // The panel and the rows FIRST, then super, which is the only thing that draws the widgets.
-        // Screen.render does nothing but iterate the renderables, so calling it first
-        // and then painting the panel drew the back arrow and immediately covered it. It still took
-        // clicks and still showed its tooltip, because hit testing does not care about draw order,
-        // which is a convincing way for a widget to look like it was never added.
+    public void renderBackground(GuiGraphics gfx, int mouseX, int mouseY, float partialTick) {
+        super.renderBackground(gfx, mouseX, mouseY, partialTick);
         GuiBlit.nineSlice(gfx, PANEL, left, top, panelW, panelH,
                 PANEL_SPRITE, PANEL_SPRITE, PANEL_BORDER);
 
@@ -212,8 +216,6 @@ public class NutritionScreen extends Screen {
             }
             index++;
         }
-
-        super.render(gfx, mouseX, mouseY, partialTick);
     }
 
     /**
