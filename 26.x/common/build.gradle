@@ -34,9 +34,17 @@ configurations {
     }
 }
 
+// Code and resources that are identical in every band live once, in the repository's shared/
+// folder: the nutrient model, the config, the sync plumbing and the platform services, plus the
+// art, the icon, the lang file and the vanilla nutrition table. Every loader takes them alongside
+// this module's own.
+sourceSets.main.java.srcDir('../../shared/java')
+
 artifacts {
-    commonJava sourceSets.main.java.sourceDirectories.singleFile
+    commonJava file('src/main/java')
+    commonJava file('../../shared/java')
     commonResources sourceSets.main.resources.sourceDirectories.singleFile
+    commonResources file('../../shared/resources')
 }
 
 // Implement mcgradleconventions loader attribute
