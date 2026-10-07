@@ -33,9 +33,12 @@ import com.chillpavz.dynamicnutrition.Constants;
  *       recursively, so bread is a carbohydrate because wheat is.</li>
  *   <li><b>The food-tag heuristic.</b> See {@link FoodTagHeuristic}. The stage that means an
  *       unknown food is never worth nothing.</li>
+ *   <li><b>The food's own name</b>, for a food that is another food in a different container:
+ *       {@code mushroom_stew_cup} is worth what {@code mushroom_stew} is. See {@link FoodWords}.
+ *       Edible items only, and only when everything above found nothing.</li>
  * </ol>
  *
- * <p>Stages 2 to 4 produce a nutrient SET; the MAGNITUDE then comes from the food's own nutrition
+ * <p>Stages 2 to 5 produce a nutrient SET; the MAGNITUDE then comes from the food's own nutrition
  * and saturation, split across that set. Only stage 1 carries real per-nutrient values, which is why
  * the shipped vanilla table is worth generating from real composition data.
  *
@@ -86,6 +89,8 @@ public final class NutritionTable {
     private final Map<Item, NutritionValues> resolved = new HashMap<>();
     private final Map<Item, NutritionOrigin> origins = new HashMap<>();
     private final Set<Item> resolving = new HashSet<>();
+    /** Item path to the items with that path, for the name stage. Built on first use. */
+    private Map<String, List<Item>> byPath = null;
     private final RecipeIndex recipes = new RecipeIndex();
     private boolean prewarmed = false;
 
@@ -115,6 +120,7 @@ public final class NutritionTable {
         origins.clear();
         resolving.clear();
         recipes.clear();
+        byPath = null;
         prewarmed = false;
         generation++;
     }
@@ -216,6 +222,19 @@ public final class NutritionTable {
             }
         }
 
+        // Stage 5: a food that is another food in a different container. Stems are strictly
+        // shorter than the name, so this cannot cycle, and the depth cap still bounds it.
+        if (set.isEmpty() && !limited && depth < MAX_DEPTH && isEdible(item)) {
+            for (Item stem : stemsOf(item)) {
+                Set<Nutrient> inherited = resolve(level, stem, depth + 1).nutrients();
+                if (!inherited.isEmpty()) {
+                    set = new LinkedHashSet<>(inherited);
+                    origin = NutritionOrigin.ofName(stem);
+                    break;
+                }
+            }
+        }
+
         NutritionValues values = NutritionValues.spread(set, magnitude(item, set.size()));
         if (!values.isEmpty() && isCooked(level, item)) {
             values = values.scaled(COOKED_BONUS);
@@ -279,6 +298,40 @@ public final class NutritionTable {
                     contributors.add(ingredientItem);
                 }
                 found.addAll(ingredientNutrients);
+            }
+        }
+        return found;
+    }
+
+    /**
+     * The items this item's name extends, longest name first, and for one name its own namespace
+     * first, then vanilla, then every other mod in registry order. Never the item itself.
+     */
+    private List<Item> stemsOf(Item item) {
+        var id = BuiltInRegistries.ITEM.getKey(item);
+        if (byPath == null) {
+            Map<String, List<Item>> index = new HashMap<>();
+            for (Item each : BuiltInRegistries.ITEM) {
+                index.computeIfAbsent(BuiltInRegistries.ITEM.getKey(each).getPath(),
+                        k -> new ArrayList<>()).add(each);
+            }
+            byPath = index;
+        }
+        List<Item> found = new ArrayList<>();
+        for (String stem : FoodWords.stems(id.getPath())) {
+            List<Item> named = byPath.getOrDefault(stem, List.of());
+            for (String namespace : List.of(id.getNamespace(), "minecraft")) {
+                for (Item candidate : named) {
+                    if (candidate != item && !found.contains(candidate)
+                            && BuiltInRegistries.ITEM.getKey(candidate).getNamespace().equals(namespace)) {
+                        found.add(candidate);
+                    }
+                }
+            }
+            for (Item candidate : named) {
+                if (candidate != item && !found.contains(candidate)) {
+                    found.add(candidate);
+                }
             }
         }
         return found;

@@ -17,6 +17,7 @@
   "tooltip.dynamicnutrition.source.recipe": "Inherited from its recipe",
   "tooltip.dynamicnutrition.source.heuristic": "Guessed from its food tags",
   "tooltip.dynamicnutrition.source.none": "No nutrition data",
+  "tooltip.dynamicnutrition.source.name": "Named after another food",
   "tooltip.dynamicnutrition.source.from": "Inherited from %s",
   "effect.dynamicnutrition.malnourished": "Malnourished",
   "effect.dynamicnutrition.well_nourished": "Well Nourished",

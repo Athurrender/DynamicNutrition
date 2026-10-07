@@ -14,7 +14,7 @@ import net.minecraft.world.item.Item;
  *
  * @param source which stage of the pipeline answered
  * @param from   for {@link Source#RECIPE}, the ingredients that contributed, in registry order and
- *               capped. Empty for every other stage.
+ *               capped; for {@link Source#NAME}, the food it was named after. Empty otherwise.
  */
 public record NutritionOrigin(NutritionOrigin.Source source, List<Item> from) {
 
@@ -33,7 +33,13 @@ public record NutritionOrigin(NutritionOrigin.Source source, List<Item> from) {
         /** Guessed from the food convention tags. The stage that means nothing is ever worth zero. */
         HEURISTIC,
         /** Nothing matched. Shown so "the mod ignored this" is distinguishable from "no data". */
-        NONE;
+        NONE,
+        /**
+         * Inherited from the food its name extends: {@code mushroom_stew_cup} from
+         * {@code mushroom_stew}. Last on purpose: the wire carries the ordinal, so a new stage goes
+         * at the end and every older one keeps its number.
+         */
+        NAME;
 
         private static final Source[] VALUES = values();
 
@@ -50,6 +56,10 @@ public record NutritionOrigin(NutritionOrigin.Source source, List<Item> from) {
     public static NutritionOrigin ofRecipe(List<Item> contributors) {
         return new NutritionOrigin(Source.RECIPE,
                 List.copyOf(contributors.subList(0, Math.min(contributors.size(), MAX_FROM))));
+    }
+
+    public static NutritionOrigin ofName(Item stem) {
+        return new NutritionOrigin(Source.NAME, List.of(stem));
     }
 
     /** Translation key for the stage's own name. */

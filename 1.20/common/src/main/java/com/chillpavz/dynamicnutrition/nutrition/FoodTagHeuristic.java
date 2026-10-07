@@ -60,6 +60,10 @@ public final class FoodTagHeuristic {
             // Non-food ingredients that the recipe walk needs to be able to resolve.
             new Rule(c("eggs"), List.of(Nutrients.PROTEIN, Nutrients.FAT)),
             new Rule(c("drinks/milk"), List.of(Nutrients.PROTEIN, Nutrients.FAT)),
+            // Juice is fruit with the fibre taken out: sugar and vitamin C. Juices are often made
+            // from a fluid (grapes stomped into a basin, then bottled), which leaves the recipe walk
+            // nothing to follow, so the tag is the only thing that can place them.
+            new Rule(c("drinks/juice"), List.of(Nutrients.CARBOHYDRATES, Nutrients.VITAMINS)),
             new Rule(c("drinks/honey"), List.of(Nutrients.CARBOHYDRATES)),
             new Rule(c("crops/wheat"), List.of(Nutrients.CARBOHYDRATES)),
             new Rule(c("crops/potato"), List.of(Nutrients.CARBOHYDRATES, Nutrients.MINERALS)),
@@ -88,6 +92,32 @@ public final class FoodTagHeuristic {
         for (Rule rule : RULES) {
             if (holder.is(rule.tag())) {
                 return new LinkedHashSet<>(rule.nutrients());
+            }
+        }
+        return fromSubtagNames(holder.tags().map(tag -> tag.location().getNamespace() + ":"
+                + tag.location().getPath()).toList());
+    }
+
+    /**
+     * No rule matched, so read the names of the item's own convention SUBTAGS. Mods add subtags no
+     * rule can list ({@code c:foods/raw_dragon_meat}, {@code c:foods/shulker_meat}) and often
+     * nothing else, not even {@code c:foods}; the last word of the name still says what the food is.
+     *
+     * <p>Sorted first, so an item with two such subtags gets the same answer on every start: a
+     * holder's tags come in no particular order.
+     */
+    static Set<Nutrient> fromSubtagNames(List<String> tagIds) {
+        List<String> paths = new java.util.ArrayList<>();
+        for (String id : tagIds) {
+            if (id.startsWith("c:foods/") || id.startsWith("c:drinks/")) {
+                paths.add(id.substring(id.indexOf('/') + 1));
+            }
+        }
+        paths.sort(null);
+        for (String path : paths) {
+            Set<Nutrient> found = FoodWords.forTagPath(path);
+            if (!found.isEmpty()) {
+                return found;
             }
         }
         return Set.of();

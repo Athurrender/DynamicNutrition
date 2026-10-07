@@ -43,8 +43,13 @@ foods and each drained at its own rate.
 
 ## Any food mod works, with no configuration
 
-Values are resolved in four stages. Explicit data first, then item tags, then the recipe graph, so
+Values are resolved in five stages. Explicit data first, then item tags, then the recipe graph, so
 bread is a carbohydrate because wheat is. Anything still unresolved is worked out from the food
+and drink convention tags that every loader ships, including the subtags mods add for themselves,
+so dragon meat from a mod nobody has written a compat patch for still reads as meat. Last, a food
+that is another food in a different container, such as a stew served in a cup, is worth what that
+food is worth.
+
 ## Configuration
 
 Cloth Config gives the mod a settings screen in four tabs: the HUD strip, the inventory button and
