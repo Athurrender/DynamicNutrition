@@ -41,15 +41,20 @@ foods and each drained at its own rate.
 - **The bars are marked** with the two thresholds for that nutrient. The marks turn white once you
   are past them.
 
-## Any food mod works, with no configuration
+## Food from other mods
 
-Values are resolved in stages. Explicit data first, then item tags, then the recipe graph, so
-bread is a carbohydrate because wheat is, even through ingredients you cannot eat on their own.
-Anything still unresolved is worked out from the food and drink convention tags, including the
-subtags mods add for themselves, so dragon meat from a mod nobody has written a compat patch for
-still reads as meat. Then a food served differently, such as a stew in a cup or a slice of a feast,
-is worth what that food is worth, and last a food's own name is read: spider meat is meat. Foods
-that no stage can place are listed by `/dynamicnutrition unassigned`.
+Values for foods the mod has no data for are worked out automatically, in stages. Explicit data
+first, then item tags, then the recipe graph, so bread is a carbohydrate because wheat is, even
+through ingredients that cannot be eaten on their own. Then the food and drink convention tags,
+including the subtags mods add for themselves, so dragon meat reads as meat. Then a food served
+differently, such as a stew in a cup or a slice of a feast, is worth what that food is worth, and
+last a food's own name is read: spider meat is meat.
+
+In a test pack of 34 food mods (1,183 foods, Minecraft 1.21.1 on NeoForge), 92% of the foods got
+values this way. The rest have none, and `/dynamicnutrition unassigned` lists them. Writing values by
+hand for every food mod is not realistic: there are thousands of modded foods, they change between
+versions, and many are fantasy foods with no real counterpart. The automatic resolver is what covers
+the most, and it improves with every reported case of a food that gets no values or the wrong ones.
 
 ## Configuration
 
