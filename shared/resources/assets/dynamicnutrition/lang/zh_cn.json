@@ -17,6 +17,8 @@
 "tooltip.dynamicnutrition.source.recipe": "继承自其配方",
 "tooltip.dynamicnutrition.source.heuristic": "根据食物标签推测",
 "tooltip.dynamicnutrition.source.none": "无营养数据",
+"tooltip.dynamicnutrition.source.name": "以另一个食物来命名",
+"tooltip.dynamicnutrition.source.words": "根据其名称推测",
 "tooltip.dynamicnutrition.source.from": "继承自 %s",
 "effect.dynamicnutrition.malnourished": "营养不良",
 "effect.dynamicnutrition.well_nourished": "营养良好",
